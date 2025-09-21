@@ -1,0 +1,134 @@
+# 1. Import Libraries
+import re
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import (
+    accuracy_score, precision_recall_fscore_support,
+    classification_report, confusion_matrix, roc_auc_score, roc_curve
+)
+import joblib
+import nltk
+
+# Download stopwords if not present
+try:
+    nltk.data.find('corpora/stopwords')
+except:
+    nltk.download('stopwords')
+
+from nltk.corpus import stopwords
+stop_words = set(stopwords.words("english"))
+
+# 2. Load Dataset (IMDb from Hugging Face)
+from datasets import load_dataset
+dataset = load_dataset("imdb")
+
+# Convert to Pandas
+train_df = pd.DataFrame(dataset['train'])
+test_df = pd.DataFrame(dataset['test'])
+df = pd.concat([train_df, test_df]).reset_index(drop=True)
+df = df.rename(columns={'text':'text','label':'label'})[['text','label']]
+
+print("Total samples:", len(df))
+print(df.head())
+
+# 3. Preprocessing
+def clean_text(text):
+    text = text.lower()
+    text = re.sub(r"<br\\s*/?>", " ", text)   # remove HTML breaks
+    text = re.sub(r"[^a-z0-9\\s]", " ", text) # remove special chars
+    text = re.sub(r"\\s+", " ", text).strip()
+    return text
+
+df["clean_text"] = df["text"].astype(str).apply(clean_text)
+
+# 4. Train-Test Split
+X = df["clean_text"]
+y = df["label"]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, stratify=y, random_state=42
+)
+
+# 5. TF-IDF + Logistic Regression Pipeline
+pipeline = Pipeline([
+    ("tfidf", TfidfVectorizer(max_df=0.9, min_df=5, ngram_range=(1,2))),
+    ("clf", LogisticRegression(max_iter=1000, solver="liblinear"))
+])
+
+param_grid = {
+    "tfidf__min_df": [1,5],
+    "tfidf__max_df": [0.85, 0.9],
+    "tfidf__ngram_range": [(1,1), (1,2)],
+    "clf__C": [0.1, 1, 10]
+}
+
+grid = GridSearchCV(
+    pipeline, param_grid, cv=3,
+    scoring="f1", n_jobs=-1, verbose=1
+)
+
+grid.fit(X_train, y_train)
+print("Best Parameters:", grid.best_params_)
+
+best_model = grid.best_estimator_
+
+# 6. Evaluation
+y_pred = best_model.predict(X_test)
+y_proba = best_model.predict_proba(X_test)[:,1]
+
+acc = accuracy_score(y_test, y_pred)
+prec, rec, f1, _ = precision_recall_fscore_support(y_test, y_pred, average="binary")
+
+print("\nModel Performance:")
+print(f"Accuracy : {acc:.4f}")
+print(f"Precision: {prec:.4f}")
+print(f"Recall   : {rec:.4f}")
+print(f"F1 Score : {f1:.4f}")
+print(f"ROC AUC  : {roc_auc_score(y_test, y_proba):.4f}")
+
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+
+# 7. Confusion Matrix Heatmap
+cm = confusion_matrix(y_test, y_pred)
+plt.figure(figsize=(6,5))
+sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=["Negative","Positive"], yticklabels=["Negative","Positive"])
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.title("Confusion Matrix")
+plt.show()
+
+# 8. ROC Curve
+fpr, tpr, thresholds = roc_curve(y_test, y_proba)
+plt.figure(figsize=(6,5))
+plt.plot(fpr, tpr, label=f"ROC Curve (AUC = {roc_auc_score(y_test, y_proba):.4f})")
+plt.plot([0,1],[0,1],"--", color="gray")
+plt.xlabel("False Positive Rate")
+plt.ylabel("True Positive Rate")
+plt.title("ROC Curve")
+plt.legend()
+plt.show()
+
+# 9. Save Model
+joblib.dump(best_model, "sentiment_tfidf_logreg_pipeline.joblib")
+print("✅ Model saved as sentiment_tfidf_logreg_pipeline.joblib")
+
+# 10. Example Predictions
+examples = [
+    "What a fantastic movie! The story and acting were superb.",
+    "Terrible film. I walked out after 20 minutes.",
+    "Mediocre, some good moments but overall forgettable."
+]
+
+preds = best_model.predict(examples)
+probs = best_model.predict_proba(examples)[:,1]
+
+for text, p, prob in zip(examples, preds, probs):
+    print("\nTEXT:", text)
+    print("Prediction:", "Positive" if p==1 else "Negative", "| Prob_Positive:", round(prob,4))

@@ -1,5 +1,19 @@
 
-# Sentiment Analysis using TF-IDF and Logistic Regression
+# Sentiment Analysis using NLP
+
+*COMPANY*: CODTECH IT SOLUTIONS  
+
+*NAME*: VASANTH KANDIBANDA  
+
+*INTERN ID*: CT08DZ1238 
+
+*DOMAIN*: MACHINE LEARNING  
+
+*DURATION*: 8 WEEKS  
+
+*MENTOR*: NEELA SANTOSH  
+
+*DESCRIPTION OF THE TASK*: 
 
 This project performs **Sentiment Analysis** on customer reviews using **TF-IDF vectorization** and **Logistic Regression**, two widely used approaches for text classification. The workflow includes preprocessing, model training, evaluation, visualization, and saving the trained model.
 

@@ -91,3 +91,7 @@ This project demonstrates the complete workflow of a **sentiment analysis system
 
 *OUTPUT*: 
 
+<img width="522" height="470" alt="Image" src="https://github.com/user-attachments/assets/304ffeb2-55c4-4e15-af44-2363c8b1c6de" />
+
+<img width="536" height="470" alt="Image" src="https://github.com/user-attachments/assets/a82f219a-7a67-458d-9e1d-587de0919581" />
+

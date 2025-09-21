@@ -91,7 +91,23 @@ This project demonstrates the complete workflow of a **sentiment analysis system
 
 *OUTPUT*: 
 
+Model Performance:
+Accuracy : 0.9202
+Precision: 0.9121
+Recall   : 0.9300
+F1 Score : 0.9210
+ROC AUC  : 0.9747
+
 <img width="522" height="470" alt="Image" src="https://github.com/user-attachments/assets/304ffeb2-55c4-4e15-af44-2363c8b1c6de" />
 
 <img width="536" height="470" alt="Image" src="https://github.com/user-attachments/assets/a82f219a-7a67-458d-9e1d-587de0919581" />
+
+TEXT: What a fantastic movie! The story and acting were superb.
+Prediction: Positive | Prob_Positive: 0.9455
+
+TEXT: Terrible film. I walked out after 20 minutes.
+Prediction: Negative | Prob_Positive: 0.0023
+
+TEXT: Mediocre, some good moments but overall forgettable.
+Prediction: Negative | Prob_Positive: 0.0074
 
